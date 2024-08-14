@@ -1,0 +1,56 @@
+Created EMR Cluster with version 7.0.0 and only Spark 3.5.0, hadoop 3.3.6, JupyterEnterpriseGateway.
+
+Use only one Primary node and one Core node and no scaling.
+
+Used a Security group for the primary node that allows SSH traffic on port 22 (confirmed that this step is not needed)
+
+Used the key pair "VinodEC2KeyPair.pem" from C:\Vinod that wwas copied over from C:\Vinod\0. From Sony Vaio\Study Material\AWS
+
+I created a bootstrap script - s3://real-time-streaming-project-vinod/bootstrap.sh - and included this bootstrap action during the cluster creation
+#!/bin/bash
+sudo pip3 install boto3
+boto3 is very much needed when working with AWS services.
+
+
+==================================================== Shell / Unix Terminal Setup from VS Code to EMR cluster Master Node ===================================================
+
+To connect to this cluster from VS Code:
+
+Open VS Code Terminal, Ctrl+Shift+P -> Remote SSH - Open SSH Configuration File (use C:\Users\Vinod\.ssh\config)
+
+Host vinod-cluster
+  HostName ec2-35-171-4-124.compute-1.amazonaws.com
+  IdentityFile C:\Vinod\VinodEC2KeyPair.pem
+  StrictHostKeyChecking no
+  User hadoop
+
+Then, again Ctrl+Shift+P -> Remote SSH -> Connect to Host
+No error should be thrown
+
+Then open a Terminal - New Terminal from top nav bar. 
+You should be taken to the master node directly.
+
+Note:
+The permission on pem file was resulting in conenctivity errors:
+Resolved by following the steps provided at: https://stackoverflow.com/questions/64687271/how-to-avoid-permission-denied-publickey-ssh-key-windows:
+Right-click on the pem file -> Properties -> Security -> Advanced -> Disable Inheritance -> Select "Convert inherited permissions into explicit permissions on this object"
+Remove all users
+Add you alone with Full Control
+
+
+
+================================================= Python setup from VS Code to EMR cluster Master Node =======================================================================
+
+
+File -> New File -> hw.py
+
+As soon as .py is seen, you might be prompted to install Python. 
+If not prompted, go to "Extensions" -> Ctrl+Shift+P -> Python -> Install 
+Or search and install Pylance and Pylance will install Python also. Pylance will help in prompting key words etc.
+Also AWS boto3 (not sure if it is part of Python itself, anyway i installed AWS boto3 as well)
+
+Now - write some simple print('hello world") (hw.py) -> Right-click and execute in Terminal 
+Check "hello world" is getting printed.
+
+Now - write another simple python program, this time using boto3 (hw1.py) -> -> Right-click and execute in Terminal 
+Check the S3 bucket names are getting printed.
