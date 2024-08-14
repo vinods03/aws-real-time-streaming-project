@@ -1,0 +1,40 @@
+Create a redshift cluster and connect to it using the Query editor v2:
+
+create database ecommerce_db;
+
+Connect to this database in the query editor.
+
+create schema dev;
+
+create table dev.orders(
+    run_id BIGINT,
+    order_id VARCHAR,
+    customer_id VARCHAR,
+    seller_id VARCHAR,
+    product_code VARCHAR,
+    product_name VARCHAR,
+    product_price int,
+    product_qty int,
+    order_ts timestamp
+);
+
+create table dev.orders_chkpoint(
+    max_order_ts timestamp
+);
+
+
+
+============= 
+
+In the AWS Console, go to Secrets Manager and create a secret "redshift-cluster-secret" - Use the option "Credentials for other database" and choose PostGres as the database.
+We can also use the option "Credentials for Amazon Redshift data warehouse".
+
+=============
+
+Come up with pyspark script orders_load_redshift.py that will read from AWS glue data catalog table "ecommerce-database"."new_orders_staging_area" and write into the redshift table ecommerce_db.dev.orders. Note the usage of glue data catalog for hive metastore client in the spark session to enable spark to read from glue data catalog tables and the usage of "io.github.spark_redshift_community.spark.redshift" to enable spark to write into redshift. Also, the spark-submit makes uses of 3 jars to ensure spark conneectivity with redshift.
+We use a redshift checkpoint table as a performance improvement measure.
+
+
+
+
+

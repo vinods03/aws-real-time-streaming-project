@@ -1,0 +1,27 @@
+create table dev.orders_audit(
+    run_id BIGINT,
+    order_id VARCHAR,
+    customer_id VARCHAR,
+    customer_name VARCHAR,
+    customer_address VARCHAR,
+    seller_id VARCHAR,
+    seller_name VARCHAR,
+    seller_address VARCHAR,
+    product_code VARCHAR,
+    product_name VARCHAR,
+    product_price int,
+    product_qty int,
+    order_ts timestamp,
+    status VARCHAR
+);
+
+Note: The "status" column will be updated once action is taken.
+
+Note: Since we need to compare S3 data with Redshift data, we create an external schema on the glue data catalog in Redshift.
+
+create external schema s3_staging_schema
+from data catalog   
+database 'ecommerce-database'
+iam_role 'arn:aws:iam::100163808729:role/MyRedshiftRoleWithAdminAccess'
+;
+

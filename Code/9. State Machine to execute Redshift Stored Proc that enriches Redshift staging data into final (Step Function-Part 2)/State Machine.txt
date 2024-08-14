@@ -1,0 +1,25 @@
+1. RedshiftData ExecuteStatement API: Move data from Redshift Staging to Redshift final:
+
+{
+  "ClusterIdentifier": "redshift-cluster-1",
+  "Database": "ecommerce_db",
+  "DbUser": "awsuser",
+  "Sql": "call dev.enriched_orders_sp();"
+}
+
+2. RedshiftData DescribeStatement API: Get the Status of the Redshift Stored Procedure:
+
+In Configuration, add:
+{
+  "Id.$": "$.Id"
+}
+
+The RHS $.Id is derived by looking at the output of a run.
+The LHS Id.$ instead simply Id, is because Id here is an Input parameter and not a static value.
+
+3. Choice State next.
+
+Again by looking at a run's output, you can find out the parameter we need is Status and by looking at documentation, the status we need to wait & go back to "Get the Status of the Redshift Stored Procedure" is NOT $.Status == FINISHED
+
+4. The default rule will ensure that once the above stored proc is completed, the Redshift vs S3 audit proc is triggered.
+

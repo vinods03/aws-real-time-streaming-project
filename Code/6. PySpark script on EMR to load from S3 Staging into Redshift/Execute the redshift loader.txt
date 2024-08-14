@@ -1,0 +1,15 @@
+If the code is on the master node of hadoop cluster.
+Here we use the jars on the master node:
+
+spark-submit --master yarn --jars /usr/share/aws/redshift/jdbc/RedshiftJDBC.jar,/usr/share/aws/redshift/spark-redshift/lib/spark-redshift.jar,/usr/share/aws/redshift/spark-redshift/lib/spark-avro.jar orders_load_redshift.py
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  BETTER APPROACH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Have the code on S3 instead of on the cluster.
+So even if cluster goes down, your code doesnt go away.
+Just ensure latest code is available on S3.
+Also, here we have the required jars on S3 - this way even if jars on the cluster change due to some maintenance activity, our jobs will not be affected.
+
+spark-submit --master yarn --jars s3://real-time-streaming-project-vinod/RedshiftJDBC.jar,s3://real-time-streaming-project-vinod/spark-avro.jar,s3://real-time-streaming-project-vinod/spark-redshift.jar s3://real-time-streaming-project-vinod/orders_load_redshift.py
+
+

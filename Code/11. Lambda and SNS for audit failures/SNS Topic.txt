@@ -1,0 +1,1 @@
+The SNS Topic new-orders-topic is created and there is an email subscription to this topic. The lambda will send notification to this topic for mismatches and email will be sent.

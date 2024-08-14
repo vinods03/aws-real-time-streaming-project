@@ -1,0 +1,26 @@
+1. RedshiftData ExecuteStatement API: Redshift vs S3 Audit Procedure:
+
+{
+  "ClusterIdentifier": "redshift-cluster-1",
+  "Database": "ecommerce_db",
+  "DbUser": "awsuser",
+  "Sql": "call dev.audit_orders_sp();"
+}
+
+2. RedshiftData DescribeStatement API: Get the Status of the above Redshift Stored Procedure:
+
+In Configuration, add:
+{
+  "Id.$": "$.Id"
+}
+
+The RHS $.Id is derived by looking at the output of a run.
+The LHS Id.$ instead simply Id, is because Id here is an Input parameter and not a static value.
+
+3. Choice State next.
+
+Again by looking at a run's output, you can find out the parameter we need is Status and by looking at documentation, the status we need to wait & go back to "Get the Status of the Redshift Stored Procedure" is NOT $.Status == FINISHED
+
+4. The default rule will go to Lambda Invoke that checks audit table and sends out notifications for each run_id that is yet to be resolved.
+In the lambda invoke api, provide the name of the lambda function: orders-audit-fn
+

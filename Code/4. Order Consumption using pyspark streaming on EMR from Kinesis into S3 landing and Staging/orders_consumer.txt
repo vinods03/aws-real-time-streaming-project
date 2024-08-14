@@ -1,0 +1,86 @@
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.appName('OrderConsumer').getOrCreate()
+
+orders_df = spark.readStream.format("aws-kinesis") \
+    .option("kinesis.region", "us-east-1") \
+    .option("kinesis.streamName", "orders-stream") \
+    .option("kinesis.consumerType", "GetRecords") \
+    .option("kinesis.endpointUrl", "https://kinesis.us-east-1.amazonaws.com") \
+    .option("kinesis.startingposition", "LATEST") \
+    .load()
+
+orders_df.printSchema()
+
+# to get string equivalent of binary data in kinesis ->
+
+orders_df = orders_df.select(orders_df.data.cast('string').alias('data'), orders_df.approximateArrivalTimestamp.alias('timestamp'))
+
+orders_df.printSchema()
+
+# to get struct equivalent of binary data in kinesis ->
+
+from pyspark.sql.functions import expr, from_json, col, explode, year, month, dayofmonth, hour
+
+def getSchema():
+        schema = """
+                    order_id string, 
+                    customer_id string, 
+                    seller_id string, 
+                    products array<struct<product_code string, product_name string, product_price int, product_qty int>>
+                """
+        
+        return schema
+          
+
+       
+orders_df = orders_df.select(from_json(orders_df.data.cast('string'), getSchema()).alias('raw_message'), orders_df.timestamp)
+
+orders_df.printSchema()
+
+# to derive individual columns from struct column
+
+orders_df = orders_df.withColumn('order_id', expr('raw_message.order_id')) \
+                     .withColumn('customer_id', expr('raw_message.customer_id')) \
+                     .withColumn('seller_id', expr('raw_message.seller_id')) \
+                     .withColumn('products', expr('raw_message.products')) \
+                     .withColumn('run_id', col('timestamp').cast('long')) \
+                     .withColumn('year', year(col('timestamp'))) \
+                     .withColumn('month', month(col('timestamp'))) \
+                     .withColumn('day', dayofmonth(col('timestamp'))) \
+                     .withColumn('hour', hour(col('timestamp'))) \
+                     .withColumnRenamed('timestamp', 'order_ts') # this column rename could have been done in line 17 itself
+                    #  .drop('raw_message') i want to store the raw message as well. so commented this out
+                     
+
+orders_df.printSchema()
+
+# arranging the columns in the order we need
+
+orders_df = orders_df.select('run_id','order_id','customer_id','seller_id','products','raw_message','order_ts','year','month','day','hour')
+
+orders_df.printSchema()
+
+orders_df.writeStream.format("parquet").option("path", "s3://real-time-streaming-project-vinod/landing-area/") \
+.option("checkpointLocation", "s3://real-time-streaming-project-vinod/landing-spark-streaming-checkpoint/") \
+.outputMode("append") \
+.partitionBy('year','month','day','hour') \
+.start() 
+# .awaitTermination() should be done after the last writeSteeam operation only
+
+orders_df = orders_df.withColumn('exploded_products', explode('products'))
+
+orders_df = orders_df.withColumn('product_code', col('exploded_products.product_code')) \
+                     .withColumn('product_name', col('exploded_products.product_name')) \
+                     .withColumn('product_price', col('exploded_products.product_price')) \
+                     .withColumn('product_qty', col('exploded_products.product_qty')) 
+
+orders_df = orders_df.select('run_id','order_id','customer_id','seller_id','product_code','product_name','product_price','product_qty','raw_message','order_ts','year','month','day','hour')
+
+orders_df.writeStream.format("parquet").option("path", "s3://real-time-streaming-project-vinod/staging-area/") \
+.option("checkpointLocation", "s3://real-time-streaming-project-vinod/staging-spark-streaming-checkpoint/") \
+.outputMode("append") \
+.partitionBy('year','month','day','hour') \
+.start() \
+.awaitTermination()
+

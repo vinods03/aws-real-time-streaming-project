@@ -1,0 +1,37 @@
+[
+  {
+    "Name": "run_id",
+    "Type": "int",
+    "Comment": ""
+  },
+  {
+    "Name": "order_id",
+    "Type": "string",
+    "Comment": ""
+  },
+  {
+    "Name": "customer_id",
+    "Type": "string",
+    "Comment": ""
+  },
+  {
+    "Name": "seller_id",
+    "Type": "string",
+    "Comment": ""
+  },
+  {
+    "Name": "products",
+    "Type": "array<struct<product_code:string,product_name:string,product_price:int,product_qty:int>>",
+    "Comment": ""
+  },
+  {
+    "Name": "order_purchase_timestamp",
+    "Type": "timestamp",
+    "Comment": ""
+  },
+  {
+    "Name": "processing_timestamp",
+    "Type": "timestamp",
+    "Comment": ""
+  }
+]

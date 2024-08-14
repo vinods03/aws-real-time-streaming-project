@@ -1,0 +1,82 @@
+On the S3 bucket real-time-streaming-project-vinod, set "Send notifications to Amazon EventBridge for all events in this bucket" to On.
+
+===============================================
+
+Create a Crawler - new-orders-landing-area-crawler - with S3 path as s3://real-time-streaming-project-vinod/landing-area/ and "exclude pattern" as "_spark_metadata/**"
+For Subsequent crawler runs, choose "Crawl new sub-folders only".
+
+Create a Crawler - new-orders-staging-area-crawler - with S3 path as s3://real-time-streaming-project-vinod/staging-area/ and "exclude pattern" as "_spark_metadata/**"
+For Subsequent crawler runs, choose "Crawl new sub-folders only".
+
+===============================================
+
+Since EventBridge Target has only Glue Workflow and no Glue Crawler, let us create 2 Glue workflows for the 2 crawlers:
+
+"new-orders-landing-area-workflow" with Trigger Type as "EventBridge event", "Number of events" as 10 and "Time delay in seconds" as 60.
+For real-time processing, you can leave "Number of events" as 1 and blank for "Time delay in seconds".
+Then, in "Add node", add the "new-orders-landing-area-crawler".
+
+"new-orders-staging-area-workflow" with Trigger Type as "EventBridge event", "Number of events" as 10 and "Time delay in seconds" as 60.
+For real-time processing, you can leave "Number of events" as 1 and blank for "Time delay in seconds".
+Then, in "Add node", add the "new-orders-staging-area-crawler".
+
+Note: We cannot have 1 workflow, with one crawler running after the other, because the 2 crawlers are based on 2 different folders of the S3 bucket.
+
+==============================================
+
+Then create 1 eventbridge rule for landing-area/ folder with source pattern as:
+
+{
+  "source": ["aws.s3"],
+  "detail-type": ["Object Created"],
+  "detail": {
+    "bucket": {
+      "name": ["real-time-streaming-project-vinod"]
+    },
+    "object": {
+      "key": [{
+        "prefix": "landing-area/"
+      }]
+    }
+  }
+} 
+
+Target as "new-orders-landing-area-workflow"
+
+Then create another eventbridge rule for staging-area/ folder with source pattern as:
+
+{
+  "source": ["aws.s3"],
+  "detail-type": ["Object Created"],
+  "detail": {
+    "bucket": {
+      "name": ["real-time-streaming-project-vinod"]
+    },
+    "object": {
+      "key": [{
+        "prefix": "staging-area/"
+      }]
+    }
+  }
+} 
+
+Target as "new-orders-staging-area-workflow"
+
+
+==========================================
+
+To verify, make sure the consumer code is running on the EMR cluster (as per steps in 4. Order Consumption using pyspark streaming on EMR)
+
+Then, publish data into the kinesis data stream (as per steps in 3. Order Generation from EC2 into Kinesis)
+
+Go to Athena & execute below queries:
+
+SELECT * FROM "AwsDataCatalog"."ecommerce-database"."new_orders_landing_area"; 
+# verify data columns look good i.e. sample data check. The count should match the count shown on the EC2 instance that is publishing data into Kinesis.
+
+SELECT * FROM "AwsDataCatalog"."ecommerce-database"."new_orders_staging_area";
+# verify data columns look good i.e. sample data check.
+
+SELECT count(distinct order_id) FROM "AwsDataCatalog"."ecommerce-database"."new_orders_staging_area";
+# The count should match the count shown on the EC2 instance that is publishing data into Kinesis.
+

@@ -1,0 +1,13 @@
+In the "writeStream" location, without the option for checkpointLocation(), the start() was failing.
+
+With format "parquet", "complete" mode is not supported.
+
+Without ".awaitTermination()" the spark streaming application will not keep running to process new data. It will simply run to Success.
+
+EMR_EC2_DefaultRole did not have permission to access kinesis shards - Added admin access to the role for now.
+
+
+"from_json" is still not working
+
+
+glue crawler (new_crawler) is creating multiple empty tables

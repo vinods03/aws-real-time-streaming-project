@@ -1,0 +1,20 @@
+Open the orders-consumer.py after you have connected to master node of EMR cluster through VS code and have run/tested the basic python program execution.
+To execute on cluster, make sure all your code is transferred to master node first. In VS Code, you can open folder in remote host and you should see your files on the remote host.
+
+Then in the Terminal, execute:
+spark-submit --master yarn --jars s3://awslabs-code-us-east-1/spark-sql-kinesis-connector/spark-streaming-sql-kinesis-connector_2.12-1.0.0.jar orders_consumer.py
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ BETTER APPROACH ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Have the code on S3 instead of on the cluster.
+So even if cluster goes down, your code doesnt go away.
+Just ensure latest code is available on S3.
+
+spark-submit --master yarn --jars s3://awslabs-code-us-east-1/spark-sql-kinesis-connector/spark-streaming-sql-kinesis-connector_2.12-1.0.0.jar s3://real-time-streaming-project-vinod/orders_consumer.py
+
+
+
+
+
+
+

@@ -1,0 +1,14 @@
+Upload order_generator.py & order_publisher_batch.py into S3 bucket s3://real-time-streaming-project-
+
+Create a Kinesis data stream orders-stream.
+
+Launch a t2.micro Ec2 instance with Instance profile that has access to S3
+
+Login to the Ec2 instance:
+aws s3 cp s3://real-time-streaming-project-vinod/order_generator.py .
+aws s3 cp s3://real-time-streaming-project-vinod/order_publisher_batch.py .
+sudo yum install pip
+sudo pip install boto3
+python3 order_publisher_batch.py orders-stream 20 
+(orders-stream is the name of the kinesis data stream & 20 is the batch size)
+

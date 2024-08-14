@@ -1,0 +1,25 @@
+Deploy mode cluster is failing i.e. below code is failing:
+This needs to be investigated.
+
+
+{
+  "ClusterId": "j-2940YM4I8A1K3",
+  "Step": {
+    "Name": "S3StgToRedshiftStgStep",
+    "ActionOnFailure": "CANCEL_AND_WAIT",
+    "HadoopJarStep": {
+      "Jar": "command-runner.jar",
+      "Args": [
+        "spark-submit",
+        "--deploy-mode",
+        "cluster",
+        "--master",
+        "yarn",
+        "--jars",
+        "s3://real-time-streaming-project-vinod/RedshiftJDBC.jar,s3://real-time-streaming-project-vinod/spark-avro.jar,s3://real-time-streaming-project-vinod/spark-redshift.jar",
+        "s3://real-time-streaming-project-vinod/orders_load_redshift.py"
+      ]
+    }
+  }
+}
+

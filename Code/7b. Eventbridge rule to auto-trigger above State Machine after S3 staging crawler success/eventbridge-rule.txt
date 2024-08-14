@@ -1,0 +1,14 @@
+Source pattern:
+
+{
+  "source": ["aws.glue"],
+  "detail-type": ["Glue Crawler State Change"],
+  "detail": {
+    "crawlerName": ["new-orders-staging-area-crawler"],
+    "state": ["Succeeded"]
+  }
+}
+
+Target:
+
+StateMachine -> MyStateMachine-RedshiftLoader

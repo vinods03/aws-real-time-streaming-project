@@ -1,0 +1,110 @@
+use ecommerce_db;
+
+create TABLE dev.customers (
+customer_id VARCHAR(100) , 
+customer_name VARCHAR(100) ,
+customer_address VARCHAR(100)
+);
+
+insert into dev.customers values ('c100','abc','chennai');
+insert into dev.customers values ('c101','def','pune');
+insert into dev.customers values ('c102','ghi','bengaluru');
+insert into dev.customers values ('c103','jkl','mumbai');
+insert into dev.customers values ('c104','mno','delhi');
+insert into dev.customers values ('c105','pqr','hyderabad');
+insert into dev.customers values ('c106','stu','jaipur');
+insert into dev.customers values ('c107','vwx','indore');
+
+-- SELLER dimension table
+
+create TABLE dev.sellers (
+seller_id VARCHAR(100) , 
+seller_name VARCHAR(100) ,
+seller_address VARCHAR(100)
+);
+
+insert into dev.sellers values ('s100','aaa','gurgaon');
+insert into dev.sellers values ('s101','bbb','gurgaon');
+insert into dev.sellers values ('s102','ccc','gurgaon');
+insert into dev.sellers values ('s103','ddd','noida');
+insert into dev.sellers values ('s104','eee','noida');
+insert into dev.sellers values ('s105','fff','noida');
+insert into dev.sellers values ('s106','ggg','kolkata');
+insert into dev.sellers values ('s107','hhh','kolkata');
+
+commit;
+
+----------
+
+create table dev.orders_temp(
+    run_id BIGINT,
+    order_id VARCHAR,
+    customer_id VARCHAR,
+    seller_id VARCHAR,
+    product_code VARCHAR,
+    product_name VARCHAR,
+    product_price int,
+    product_qty int,
+    order_ts timestamp
+);
+
+
+
+create table dev.orders_final(
+    run_id BIGINT,
+    order_id VARCHAR,
+    customer_id VARCHAR,
+    customer_name VARCHAR,
+    customer_address VARCHAR,
+    seller_id VARCHAR,
+    seller_name VARCHAR,
+    seller_address VARCHAR,
+    product_code VARCHAR,
+    product_name VARCHAR,
+    product_price int,
+    product_qty int,
+    order_ts timestamp
+);
+
+-----------------
+
+-- customer / seller related enrichment is done here.
+
+
+CREATE OR REPLACE PROCEDURE dev.enriched_orders_sp ()
+AS $$
+BEGIN
+
+ RAISE INFO 'STARTING THE LOAD INTO dev.orders_final';
+
+ INSERT INTO dev.orders_temp
+ select run_id, order_id, customer_id, seller_id, product_code, product_name, product_price, product_qty, order_ts
+ from dev.orders stg
+ where stg.run_id not in (select distinct run_id from dev.orders_final);
+
+ INSERT INTO dev.orders_final
+ select run_id, order_id, a.customer_id, customer_name, customer_address, a.seller_id, seller_name, seller_address, product_code, product_name, product_price, product_qty, order_ts from dev.orders_temp a left outer join dev.customers b
+ on a.customer_id = b.customer_id
+ left outer join dev.sellers c
+ on a.seller_id = c.seller_id;
+
+ COMMIT;
+ 
+ TRUNCATE TABLE dev.orders_temp;
+
+ RAISE INFO 'COMPLETED THE LOAD INTO dev.orders_final';
+
+EXCEPTION 
+ 
+ WHEN OTHERS THEN
+ RAISE EXCEPTION 'LOAD INTO dev.orders_final failed';
+ 
+END;
+$$ LANGUAGE plpgsql;
+
+
+------------------------------------ How to invoke / test the above stored proc: -------------------------------------------
+
+call dev.enriched_orders_sp();
+
+
